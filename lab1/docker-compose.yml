@@ -1,0 +1,260 @@
+services:
+  nginx:
+    build:
+      context: ./nginx
+    ports:
+      - "1080:80"
+    depends_on:
+      gateway:
+        condition: service_started
+      # frontend:
+      #   condition: service_started
+
+  # frontend:
+  #   build:
+  #     context: ./callmentor-frontend
+  #     dockerfile: Dockerfile
+
+  gateway:
+    build:
+      context: ./gateway
+    env_file: ./gateway/.env
+    volumes:
+      - ./gateway:/src
+      - ./gateway/migrations:/src/migrations
+    ports:
+      - "8000:8000"
+    # depends_on:
+    #   gateway-db:
+    #     condition: service_started
+    #   ml-service:
+    #     condition: service_healthy
+    #   ml-asr-worker:
+    #     condition: service_started
+    #   ml-llm-worker:
+    #     condition: service_started
+    labels:
+      traefik.enable: true
+      traefik.http.services.callmentor-gateway.loadbalancer.server.port: 8000
+      traefik.http.routers.callmentor-gateway.rule: "Host(`api.callmentor.metamentor.pro`)"
+      traefik.http.routers.callmentor-gateway.tls.certresolver: "le"
+      traefik.http.routers.callmentor-gateway.entrypoints: "web,websecure"
+      traefik.http.routers.callmentor-gateway.tls: true
+
+  gateway-db:
+    image: postgres:latest
+    shm_size: 1gb
+    env_file: ./gateway/.env
+    # volumes:
+    #   - gateway_postgres_data:/var/lib/postgresql
+    ports:
+      - "5432:5432"
+
+  # gateway-redis:
+  #   image: redis:latest
+  #   container_name: gateway-redis
+  #   restart: always
+  #   command: --port 5372
+  #   expose:
+  #     - 5372
+
+#   ml-service:
+#     build:
+#       context: ./ml-service
+#     env_file: ml-service/.env
+#     restart: unless-stopped
+#     command: python main.py
+#     volumes:
+#       - ./data/calls:/app/data
+#     ports:
+#       - "9001:8000"
+#     depends_on:
+#       rabbitmq:
+#         condition: service_healthy
+#       ml-redis:
+#         condition: service_started
+#       ml-asr-worker:
+#         condition: service_started
+#       ml-llm-worker:
+#         condition: service_started
+#       grafana:
+#         condition: service_started
+#     healthcheck:
+#       test: ["CMD", "curl", "-f", "http://localhost:8000/ml/healthcheck"]
+#       interval: 120s
+#       timeout: 5s
+#       retries: 5
+#       start_period: 10s
+
+#   ml-llm-worker:
+#     build:
+#       context: ./ml-llm
+#     env_file: ml-llm/.env
+#     restart: unless-stopped
+#     command: watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- python main.py
+#     volumes:
+#       - ./data/calls:/app/data
+#     depends_on:
+#       rabbitmq:
+#         condition: service_healthy
+#       ml-redis:
+#         condition: service_started
+#     healthcheck:
+#       test: ["CMD", "curl", "-f", "http://localhost:8000/llm/healthcheck"]
+#       interval: 120s
+#       timeout: 5s
+#       retries: 5
+#       start_period: 10s
+
+#   ml-asr-worker:
+#     build:
+#       context: ./ml-asr
+#     env_file: ml-asr/.env
+#     restart: unless-stopped
+#     command: watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- python main.py
+#     volumes:
+#       - ./data/calls:/app/data
+#     depends_on:
+#       rabbitmq:
+#         condition: service_healthy
+#       ml-redis:
+#         condition: service_started
+#     healthcheck:
+#       test: ["CMD", "curl", "-f", "http://localhost:8000/asr/healthcheck"]
+#       interval: 120s
+#       timeout: 5s
+#       retries: 5
+#       start_period: 10s
+
+#   ml-redis:
+#     image: redis:latest
+#     restart: always
+#     command: --port 5370
+#     expose:
+#       - 5370
+
+#   # telegram-bot:
+#   #   container_name: telegram-bot
+#   #   hostname: telegram-bot
+#   #   build:
+#   #     context: ./bot
+#   #   restart: always
+#   #   env_file:
+#   #     - ./bot/.env
+#   #   command: ["python", "main.py"]
+    
+#   rabbitmq:
+#     image: rabbitmq:3.13-management
+#     ports:
+#       - "5672:5672"
+#       - "15672:15672"
+#     volumes:
+#       - rabbitmq_data:/var/lib/rabbitmq
+#     environment:
+#       RABBITMQ_DEFAULT_USER: "${RABBITMQ_USER:-guest}"
+#       RABBITMQ_DEFAULT_PASS: "${RABBITMQ_PASSWORD:-guest}"
+#     healthcheck:
+#       test: ["CMD-SHELL", "rabbitmq-diagnostics -q check_running"]
+#       interval: 10s
+#       timeout: 5s
+#       retries: 5
+#       start_period: 10s
+
+#   loki:
+#     image: grafana/loki:3.5.9
+#     container_name: loki
+#     ports:
+#       - "3100:3100"
+#     command: -config.file=/etc/loki/config.yml
+#     volumes:
+#       - ./observability/loki-config.yml:/etc/loki/config.yml:ro
+#       - loki-data:/loki
+#     restart: unless-stopped
+
+#   promtail:
+#     image: grafana/promtail:3.6.0
+#     container_name: promtail
+#     command: -config.file=/etc/promtail/config.yml
+#     volumes:
+#       - ./observability/promtail-config.yml:/etc/promtail/config.yml:ro
+#       - /var/lib/docker/containers:/var/lib/docker/containers:ro
+#       - /var/run/docker.sock:/var/run/docker.sock:ro
+#     depends_on:
+#       - loki
+#     restart: unless-stopped
+
+#   prometheus:
+#     image: prom/prometheus:v2.54.1
+#     container_name: prometheus
+#     ports:
+#       - "9090:9090"
+#     command:
+#       - "--config.file=/etc/prometheus/prometheus.yml"
+#       - "--storage.tsdb.path=/prometheus"
+#       - "--web.enable-lifecycle"
+#     volumes:
+#       - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+#       - prometheus-data:/prometheus
+#     depends_on:
+#       - rabbitmq
+#       - node-exporter
+#       - cadvisor
+#     restart: unless-stopped
+
+#   node-exporter:
+#     image: prom/node-exporter:v1.8.1
+#     container_name: node-exporter
+#     restart: unless-stopped
+#     ports:
+#       - "9100:9100"
+#     command:
+#       - --path.rootfs=/host
+#       - --collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($|/)
+#     volumes:
+#       - /:/host:ro
+
+#   cadvisor:
+#     image: gcr.io/cadvisor/cadvisor:v0.49.1
+#     container_name: cadvisor
+#     restart: unless-stopped
+#     ports:
+#       - "8081:8080"
+#     volumes:
+#       - /:/rootfs:ro
+#       - /var/run:/var/run:ro
+#       - /sys:/sys:ro
+#       - /var/lib/docker/:/var/lib/docker:ro
+#       - /dev/disk/:/dev/disk:ro
+#     privileged: true
+
+#   grafana:
+#     image: grafana/grafana:11.1.0
+#     container_name: grafana
+#     ports:
+#       - "3000:3000"
+#     environment:
+#       - GF_SECURITY_ADMIN_USER=admin
+#       - GF_SECURITY_ADMIN_PASSWORD=admin
+#       - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
+#     volumes:
+#       # - grafana-data:/var/lib/grafana
+#       - ./observability/grafana-provisioning/dashboards/dashboards.yml:/etc/grafana-provisioning/dashboards/dashboards.yml:ro
+#       # - ./observability/grafana-provisioning/dashboards-json:/etc/grafana/dashboards:ro
+#       - grafana-data:/var/lib/grafana
+#       - ./observability/grafana-provisioning:/etc/grafana/provisioning:ro
+#       - ./observability/grafana-provisioning/dashboards-json:/etc/grafana/dashboards:ro
+#     depends_on:
+#       - loki
+#       - promtail
+#       - prometheus
+#     restart: unless-stopped
+
+# volumes:
+#   gateway_postgres_data:
+#     name: gateway-volume-db
+#   rabbitmq_data:
+#     name: rabbitmq_data
+#   grafana-data:
+#   loki-data:
+#   prometheus-data:
+#   redis_data:

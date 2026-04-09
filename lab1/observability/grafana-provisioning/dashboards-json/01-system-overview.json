@@ -1,0 +1,115 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_LOKI",
+      "label": "Loki",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "loki",
+      "pluginName": "Loki"
+    }
+  ],
+  "__requires": [
+    { "type": "grafana", "id": "grafana", "name": "Grafana", "version": "11.1.0" },
+    { "type": "datasource", "id": "loki", "name": "Loki", "version": "1.0.0" }
+  ],
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Logs rate by service (lines/sec)",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+      "datasource": { "type": "loki", "uid": "loki" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (compose_service) (rate({compose_project=~\".+\"}[1m]))",
+          "legendFormat": "{{compose_service}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Error rate by service (lines/sec)",
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+      "datasource": { "type": "loki", "uid": "loki" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (compose_service) (rate({compose_project=~\".+\"} |~ \"(?i)error|exception|traceback|failed|fatal|panic\"[5m]))",
+          "legendFormat": "{{compose_service}}"
+        }
+      ]
+    },
+    {
+      "type": "bargauge",
+      "title": "Top services by errors (last 10m)",
+      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 7 },
+      "datasource": { "type": "loki", "uid": "loki" },
+      "options": { "displayMode": "gradient", "showUnfilled": true },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "topk(10, sum by (compose_service) (count_over_time({compose_project=~\".+\"} |~ \"(?i)error|exception|traceback|failed|fatal|panic\"[10m])))",
+          "legendFormat": "{{compose_service}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Healthcheck OK rate (req/sec) by service",
+      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 7 },
+      "datasource": { "type": "loki", "uid": "loki" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (compose_service) (rate({compose_project=~\".+\"} |= \"GET /\" |~ \"(?i)healthcheck\" |= \"200 OK\"[1m]))",
+          "legendFormat": "{{compose_service}}"
+        }
+      ]
+    },
+    {
+      "type": "logs",
+      "title": "Recent errors (all services)",
+      "gridPos": { "x": 0, "y": 15, "w": 24, "h": 10 },
+      "datasource": { "type": "loki", "uid": "loki" },
+      "options": { "showTime": true, "showLabels": true, "wrapLogMessage": true, "prettifyLogMessage": false },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "{compose_project=~\".+\"} |~ \"(?i)error|exception|traceback|failed|fatal|panic\""
+        }
+      ]
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 39,
+  "style": "dark",
+  "tags": ["callmentor"],
+  "templating": {
+    "list": [
+      {
+        "type": "query",
+        "name": "service",
+        "label": "Service",
+        "datasource": { "type": "loki", "uid": "loki" },
+        "query": "label_values(compose_service)",
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "current": { "selected": true, "text": "All", "value": "$__all" }
+      }
+    ]
+  },
+  "time": { "from": "now-6h", "to": "now" },
+  "timepicker": {},
+  "timezone": "",
+  "title": "CallMentor • System Overview",
+  "version": 1,
+  "weekStart": ""
+}

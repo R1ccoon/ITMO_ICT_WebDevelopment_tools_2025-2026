@@ -1,0 +1,808 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "sum(rate({compose_service=\"ml-asr-worker\"} |= \"exchange | asr_transcription |\" |= \"Received\" [1m]))\n",
+          "legendFormat": "ASR Received",
+          "queryType": "range",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "sum(rate({compose_service=\"ml-asr-worker\"} |= \"exchange | asr_transcription |\" |= \"Processed\" [1m]))\n",
+          "legendFormat": "ASR Processed",
+          "queryType": "range",
+          "refId": "B"
+        }
+      ],
+      "title": "ASR tasks: Received vs Processed (req/sec)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum(rate({compose_service=\"ml-asr-worker\"} |~ \"(?i)Triton unavailable\"[5m]))",
+          "legendFormat": "Triton unavailable",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(rate({compose_service=\"ml-asr-worker\"} |~ \"(?i)Falling back to offline transcription\"[5m]))",
+          "legendFormat": "Fallback offline",
+          "refId": "B"
+        }
+      ],
+      "title": "ASR Triton unavailable → fallback (events/sec)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "id": 3,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum(rate({compose_service=\"ml-asr-worker\"} |~ \"LLM_POSTPROCESSING_QUEUE\"[1m]))",
+          "legendFormat": "enqueued",
+          "refId": "A"
+        }
+      ],
+      "title": "ASR → LLM_POSTPROCESSING_QUEUE enqueue rate (events/sec)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "id": 4,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum(rate({compose_service=\"ml-service\"} |~ \"GET /ml/healthcheck\" |= \"200 OK\"[1m]))",
+          "legendFormat": "ml-service",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(rate({compose_service=\"ml-asr-worker\"} |~ \"GET /asr/healthcheck\" |= \"200 OK\"[1m]))",
+          "legendFormat": "asr-worker",
+          "refId": "B"
+        },
+        {
+          "expr": "sum(rate({compose_service=\"ml-llm-worker\"} |~ \"GET /llm/healthcheck\" |= \"200 OK\"[1m]))",
+          "legendFormat": "llm-worker",
+          "refId": "C"
+        }
+      ],
+      "title": "Healthcheck OK rate (ml-service / asr / llm)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 15
+      },
+      "id": 5,
+      "options": {
+        "displayMode": "gradient",
+        "maxVizHeight": 300,
+        "minVizHeight": 16,
+        "minVizWidth": 8,
+        "namePlacement": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true,
+        "sizing": "auto",
+        "valueMode": "color"
+      },
+      "pluginVersion": "11.1.0",
+      "targets": [
+        {
+          "expr": "sum by (compose_service) (count_over_time({compose_service=~\"ml-service|ml-asr-worker|ml-llm-worker\"} |~ \"(?i)error|exception|traceback|failed|fatal|panic\"[15m]))",
+          "legendFormat": "{{compose_service}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Pipeline errors by component (last 15m)",
+      "type": "bargauge"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 15
+      },
+      "id": 6,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": true,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      },
+      "targets": [
+        {
+          "expr": "{compose_service=~\"ml-service|ml-asr-worker|ml-llm-worker\"} |~ \"(?i)error|exception|traceback|failed|fatal|panic\"",
+          "refId": "A"
+        }
+      ],
+      "title": "ASR/LLM/ML errors (live)",
+      "type": "logs"
+    },
+      {
+    "type": "timeseries",
+    "title": "LLM healthcheck OK rate (req/sec)",
+    "gridPos": { "x": 0, "y": 22, "w": 8, "h": 7 },
+    "datasource": { "type": "loki", "uid": "loki" },
+    "targets": [
+      {
+        "refId": "A",
+        "expr": "sum(rate({compose_service=\"ml-llm-worker\"} |= \"GET /llm/healthcheck\" |= \"200 OK\" [1m]))",
+        "legendFormat": "llm /healthcheck 200"
+      }
+    ]
+  },
+  {
+    "type": "timeseries",
+    "title": "LLM restarts (Application startup complete) (events/min)",
+    "gridPos": { "x": 8, "y": 22, "w": 8, "h": 7 },
+    "datasource": { "type": "loki", "uid": "loki" },
+    "targets": [
+      {
+        "refId": "A",
+        "expr": "sum(rate({compose_service=\"ml-llm-worker\"} |= \"Application startup complete\" [5m])) * 60",
+        "legendFormat": "startup/min"
+      }
+    ]
+  },
+    {
+        "type": "timeseries",
+        "title": "LLM consumers ready (waiting for messages) (events/sec)",
+        "gridPos": { "x": 16, "y": 22, "w": 8, "h": 7 },
+        "datasource": { "type": "loki", "uid": "loki" },
+        "targets": [
+        {
+            "refId": "A",
+            "expr": "sum(rate({compose_service=\"ml-llm-worker\"} |= \"waiting for messages\" [5m]))",
+            "legendFormat": "waiting-for-messages"
+        }
+        ]
+    },
+
+    {
+        "type": "timeseries",
+        "title": "LLM postprocessing: Received vs Processed (req/sec)",
+        "gridPos": { "x": 0, "y": 29, "w": 12, "h": 8 },
+        "datasource": { "type": "loki", "uid": "loki" },
+        "targets": [
+        {
+            "refId": "A",
+            "expr": "sum(rate({compose_service=\"ml-llm-worker\"} |= \"exchange | llm_postprocessing\" |= \"Received\" [1m]))",
+            "legendFormat": "postproc Received"
+        },
+        {
+            "refId": "B",
+            "expr": "sum(rate({compose_service=\"ml-llm-worker\"} |= \"exchange | llm_postprocessing\" |= \"Processed\" [1m]))",
+            "legendFormat": "postproc Processed"
+        }
+        ]
+    },
+    {
+        "type": "timeseries",
+        "title": "LLM task: Received vs Processed (req/sec)",
+        "gridPos": { "x": 12, "y": 29, "w": 12, "h": 8 },
+        "datasource": { "type": "loki", "uid": "loki" },
+        "targets": [
+        {
+            "refId": "A",
+            "expr": "sum(rate({compose_service=\"ml-llm-worker\"} |= \"exchange | llm_task\" |= \"Received\" [1m]))",
+            "legendFormat": "llm_task Received"
+        },
+        {
+            "refId": "B",
+            "expr": "sum(rate({compose_service=\"ml-llm-worker\"} |= \"exchange | llm_task\" |= \"Processed\" [1m]))",
+            "legendFormat": "llm_task Processed"
+        }
+        ]
+    },
+
+    {
+        "type": "timeseries",
+        "title": "LLM stage events (postprocess start/end, enqueue, callback) (events/sec)",
+        "gridPos": { "x": 0, "y": 37, "w": 12, "h": 8 },
+        "datasource": { "type": "loki", "uid": "loki" },
+        "targets": [
+        {
+            "refId": "A",
+            "expr": "sum(rate({compose_service=\"ml-llm-worker\"} |= \"Запускаю постпроцессинг\" [1m]))",
+            "legendFormat": "postprocess start"
+        },
+        {
+            "refId": "B",
+            "expr": "sum(rate({compose_service=\"ml-llm-worker\"} |= \"Завершили постпроцессинг\" [1m]))",
+            "legendFormat": "postprocess end"
+        },
+        {
+            "refId": "C",
+            "expr": "sum(rate({compose_service=\"ml-llm-worker\"} |= \"Поставили в очередь LLM_TASK_QUEUE\" [1m]))",
+            "legendFormat": "enqueue LLM_TASK_QUEUE"
+        },
+        {
+            "refId": "D",
+            "expr": "sum(rate({compose_service=\"ml-llm-worker\"} |= \"Поставил в очередь на Callback\" [1m]))",
+            "legendFormat": "enqueue Callback"
+        }
+        ]
+    },
+    {
+        "type": "timeseries",
+        "title": "LLM backlog proxy (5m window): Received - Processed",
+        "gridPos": { "x": 12, "y": 37, "w": 12, "h": 8 },
+        "datasource": { "type": "loki", "uid": "loki" },
+        "targets": [
+        {
+            "refId": "A",
+            "expr": "sum(count_over_time({compose_service=\"ml-llm-worker\"} |= \"exchange | llm_postprocessing\" |= \"Received\" [5m])) - sum(count_over_time({compose_service=\"ml-llm-worker\"} |= \"exchange | llm_postprocessing\" |= \"Processed\" [5m]))",
+            "legendFormat": "postprocessing backlog"
+        },
+        {
+            "refId": "B",
+            "expr": "sum(count_over_time({compose_service=\"ml-llm-worker\"} |= \"exchange | llm_task\" |= \"Received\" [5m])) - sum(count_over_time({compose_service=\"ml-llm-worker\"} |= \"exchange | llm_task\" |= \"Processed\" [5m]))",
+            "legendFormat": "llm_task backlog"
+        }
+        ]
+    },
+
+    {
+        "type": "logs",
+        "title": "LLM worker logs (focus: pipeline + errors)",
+        "gridPos": { "x": 0, "y": 45, "w": 24, "h": 9 },
+        "datasource": { "type": "loki", "uid": "loki" },
+        "options": { "showTime": true, "showLabels": true, "wrapLogMessage": true, "prettifyLogMessage": false },
+        "targets": [
+        {
+            "refId": "A",
+            "expr": "{compose_service=\"ml-llm-worker\"} |= \"exchange\""
+        }
+        ]
+    },
+      {
+    "type": "timeseries",
+    "title": "ML healthcheck OK rate (req/sec)",
+    "gridPos": { "x": 0, "y": 54, "w": 8, "h": 7 },
+    "datasource": { "type": "loki", "uid": "loki" },
+    "targets": [
+      {
+        "refId": "A",
+        "expr": "sum(rate({compose_service=\"ml-service\"} |= \"GET /ml/healthcheck\" |= \"200 OK\" [1m]))",
+        "legendFormat": "ml /healthcheck 200"
+      }
+    ]
+  },
+    {
+        "type": "timeseries",
+        "title": "ML /process-audio throughput (req/sec)",
+        "gridPos": { "x": 8, "y": 54, "w": 8, "h": 7 },
+        "datasource": { "type": "loki", "uid": "loki" },
+        "targets": [
+        {
+            "refId": "A",
+            "expr": "sum(rate({compose_service=\"ml-service\"} |= \"POST /process-audio\" |= \"200 OK\" [1m]))",
+            "legendFormat": "POST /process-audio 200"
+        }
+        ]
+    },
+    {
+        "type": "timeseries",
+        "title": "ML restarts (Application startup complete) (events/min)",
+        "gridPos": { "x": 16, "y": 54, "w": 8, "h": 7 },
+        "datasource": { "type": "loki", "uid": "loki" },
+        "targets": [
+        {
+            "refId": "A",
+            "expr": "sum(rate({compose_service=\"ml-service\"} |= \"Application startup complete\" [5m])) * 60",
+            "legendFormat": "startup/min"
+        }
+        ]
+    },
+    {
+        "type": "timeseries",
+        "title": "ML routing: stereo detected → ASR queue (events/sec)",
+        "gridPos": { "x": 0, "y": 61, "w": 12, "h": 8 },
+        "datasource": { "type": "loki", "uid": "loki" },
+        "targets": [
+        {
+            "refId": "A",
+            "expr": "sum(rate({compose_service=\"ml-service\"} |= \"Stereo detected\" |= \"publish to ASR_TRANSCRIPTION_QUEUE\" [1m]))",
+            "legendFormat": "Stereo→ASR_TRANSCRIPTION_QUEUE"
+        },
+        {
+            "refId": "B",
+            "expr": "sum(rate({compose_service=\"ml-service\"} |= \"Audio channels detected\" [1m]))",
+            "legendFormat": "Audio channels detected"
+        }
+        ]
+    },
+    {
+        "type": "timeseries",
+        "title": "Callback queue: Received vs Processed (req/sec)",
+        "gridPos": { "x": 12, "y": 61, "w": 12, "h": 8 },
+        "datasource": { "type": "loki", "uid": "loki" },
+        "targets": [
+        {
+            "refId": "A",
+            "expr": "sum(rate({compose_service=\"ml-service\"} |= \"exchange | callback_task\" |= \"Received\" [1m]))",
+            "legendFormat": "callback Received"
+        },
+        {
+            "refId": "B",
+            "expr": "sum(rate({compose_service=\"ml-service\"} |= \"exchange | callback_task\" |= \"Processed\" [1m]))",
+            "legendFormat": "callback Processed"
+        }
+        ]
+    },
+
+    {
+        "type": "timeseries",
+        "title": "Callback send attempts (events/sec)",
+        "gridPos": { "x": 0, "y": 69, "w": 12, "h": 7 },
+        "datasource": { "type": "loki", "uid": "loki" },
+        "targets": [
+        {
+            "refId": "A",
+            "expr": "sum(rate({compose_service=\"ml-service\"} |= \"Отправляю Callback\" [1m]))",
+            "legendFormat": "send callback"
+        }
+        ]
+    },
+    {
+        "type": "timeseries",
+        "title": "Callback errors: missing http/https (events/sec)",
+        "gridPos": { "x": 12, "y": 69, "w": 12, "h": 7 },
+        "datasource": { "type": "loki", "uid": "loki" },
+        "targets": [
+        {
+            "refId": "A",
+            "expr": "sum(rate({compose_service=\"ml-service\"} |= \"Request URL is missing an 'http://' or 'https://' protocol.\" [1m]))",
+            "legendFormat": "UnsupportedProtocol"
+        },
+        {
+            "refId": "B",
+            "expr": "sum(rate({compose_service=\"ml-service\"} |= \"Ошибка отправки callback\" [1m]))",
+            "legendFormat": "callback send error"
+        }
+        ]
+    },
+
+    {
+        "type": "timeseries",
+        "title": "Callback backlog proxy (5m): Received - Processed",
+        "gridPos": { "x": 0, "y": 76, "w": 12, "h": 7 },
+        "datasource": { "type": "loki", "uid": "loki" },
+        "targets": [
+        {
+            "refId": "A",
+            "expr": "sum(count_over_time({compose_service=\"ml-service\"} |= \"exchange | callback_task\" |= \"Received\" [5m])) - sum(count_over_time({compose_service=\"ml-service\"} |= \"exchange | callback_task\" |= \"Processed\" [5m]))",
+            "legendFormat": "callback backlog"
+        }
+        ]
+    },
+    {
+        "type": "timeseries",
+        "title": "ML errors & tracebacks (events/sec)",
+        "gridPos": { "x": 12, "y": 76, "w": 12, "h": 7 },
+        "datasource": { "type": "loki", "uid": "loki" },
+        "targets": [
+        {
+            "refId": "A",
+            "expr": "sum(rate({compose_service=\"ml-service\"} |= \"ERROR\" [1m]))",
+            "legendFormat": "ERROR"
+        },
+        {
+            "refId": "B",
+            "expr": "sum(rate({compose_service=\"ml-service\"} |= \"Traceback\" [1m]))",
+            "legendFormat": "Traceback"
+        }
+        ]
+    },
+
+    {
+        "type": "logs",
+        "title": "ML service logs (routing + callback + errors)",
+        "gridPos": { "x": 0, "y": 83, "w": 24, "h": 9 },
+        "datasource": { "type": "loki", "uid": "loki" },
+        "options": { "showTime": true, "showLabels": true, "wrapLogMessage": true, "prettifyLogMessage": false },
+        "targets": [
+        {
+            "refId": "A",
+            "expr": "{compose_service=\"ml-service\"} |= \"ID:\""
+        }
+        ]
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 39,
+  "tags": [
+    "callmentor",
+    "ml"
+  ],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "CallMentor • ML Pipeline",
+  "uid": "cfbmz36hwxc74c",
+  "version": 6,
+  "weekStart": ""
+}

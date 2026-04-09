@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Лабораторная работа №1 — Сервис личных финансов</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --surface: #1a2332;
+      --text: #e7ecf3;
+      --muted: #8b9cb3;
+      --accent: #3d8bfd;
+      --border: #2d3a4d;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.65;
+      font-size: 1rem;
+    }
+    .wrap { max-width: 52rem; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+    header {
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    h1 { font-size: 1.75rem; font-weight: 600; margin: 0 0 0.5rem; letter-spacing: -0.02em; }
+    .meta { color: var(--muted); font-size: 0.95rem; }
+    h2 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin: 2.25rem 0 0.75rem;
+      color: var(--accent);
+    }
+    p { margin: 0 0 1rem; color: var(--text); }
+    ul { margin: 0 0 1rem; padding-left: 1.25rem; color: var(--text); }
+    li { margin-bottom: 0.35rem; }
+    code, pre {
+      font-family: ui-monospace, "Cascadia Code", "SF Mono", monospace;
+      font-size: 0.88em;
+    }
+    pre {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.1rem;
+      overflow-x: auto;
+      margin: 0 0 1rem;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.1rem 1.25rem;
+      margin: 1rem 0;
+    }
+    .card strong { color: #fff; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    footer {
+      margin-top: 3rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Лабораторная работа №1</h1>
+      <p class="meta">Разработка сервиса управления личными финансами · FastAPI · PostgreSQL · JWT</p>
+    </header>
+
+    <section>
+      <h2>Цель работы</h2>
+      <p>
+        Спроектировать и реализовать backend-сервис для учёта доходов и расходов, категорий, бюджетов и целей,
+        с аутентификацией пользователей и REST API для типовых операций CRUD.
+      </p>
+    </section>
+
+    <section>
+      <h2>Постановка задачи</h2>
+      <ul>
+        <li>пользователь вводит доходы и расходы, задаёт бюджеты по категориям, ведёт цели;</li>
+        <li>данные хранятся в реляционной БД с явными связями one-to-many и many-to-many;</li>
+        <li>ассоциативная сущность для M2M содержит поле, характеризующее связь (не только внешние ключи);</li>
+        <li>API: регистрация, вход (JWT), профиль, список пользователей, смена пароля;</li>
+        <li>CRUD по сущностям предметной области и выдача вложенных структур там, где нужны связи.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Технологический стек</h2>
+      <div class="card">
+        <strong>Backend:</strong> Python 3, FastAPI, Uvicorn<br />
+        <strong>БД:</strong> PostgreSQL, SQLAlchemy 2.x, Alembic<br />
+        <strong>Безопасность:</strong> JWT (python-jose), хэширование паролей (passlib / argon2)<br />
+        <strong>Инфраструктура:</strong> Docker Compose (при необходимости), Redis для TTL-токенов (Telegram-flow)<br />
+        <strong>Документация API:</strong> OpenAPI / Scalar
+      </div>
+    </section>
+
+    <section>
+      <h2>Модель данных</h2>
+      <p>Реализовано не менее семи таблиц. Основные сущности:</p>
+      <ul>
+        <li><code>users</code> — пользователь (email, ФИО, хэш пароля, активность, метки времени);</li>
+        <li><code>finance_accounts</code> — счета пользователя (one-to-many от пользователя);</li>
+        <li><code>finance_categories</code> — категории дохода/расхода;</li>
+        <li><code>finance_transactions</code> — операции (связь со счётом и категорией);</li>
+        <li><code>finance_budgets</code> — лимиты по категориям и периоду;</li>
+        <li><code>finance_goals</code> — финансовые цели;</li>
+        <li><code>finance_tags</code> и <code>m2m_transaction_tags</code> — теги и связь many-to-many с транзакциями;
+          в ассоциативной таблице задано дополнительное поле (например, вес релевантности тега к операции).</li>
+      </ul>
+      <p>
+        Связи: пользователь → счета, категории, транзакции, бюджеты, цели, теги (one-to-many);
+        транзакция ↔ тег (many-to-many через промежуточную таблицу с атрибутом связи).
+      </p>
+    </section>
+
+    <section>
+      <h2>Архитектура приложения</h2>
+      <p>Слои проекта (каталог <code>lab1/gateway/</code>):</p>
+      <ul>
+        <li><code>api/apps/</code> — маршруты FastAPI по типам запросов (get/post/put/delete), <code>response_model</code> и описания для OpenAPI;</li>
+        <li><code>core/</code> — бизнес-логика (auth, users, finance), возврат типизированных DTO из <code>templates/base_models</code>;</li>
+        <li><code>models/</code> — ORM-модели SQLAlchemy;</li>
+        <li><code>templates/</code> — Pydantic-схемы запросов/ответов и enums;</li>
+        <li><code>migrations/</code> — ручная миграция Alembic на создание схемы;</li>
+        <li><code>schedulers/data_init.py</code> — начальное наполнение БД (демо-пользователь, категории, счёт и т.д.);</li>
+        <li><code>middlewares/permission.py</code> — проверка Bearer JWT для защищённых маршрутов.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>API (кратко)</h2>
+      <ul>
+        <li><strong>Auth:</strong> <code>POST /auth/register</code>, <code>POST /auth/login</code> (OAuth2 password form), смена пароля, при необходимости — Telegram TTL-токены;</li>
+        <li><strong>Пользователи:</strong> <code>GET /auth/me</code>, <code>GET /auth/users</code>, <code>GET /users/...</code>, детальный ответ с вложенными счетами, категориями, бюджетами, целями и транзакциями с тегами;</li>
+        <li><strong>Финансы:</strong> CRUD по счетам, категориям, транзакциям, бюджетам, целям, тегам; привязка тега к транзакции.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Результаты</h2>
+      <ul>
+        <li>схема БД соответствует требованиям по числу таблиц и типам связей;</li>
+        <li>реализованы аутентификация JWT и типовые эндпоинты для пользователя;</li>
+        <li>данные и ответы API согласованы с Pydantic-моделями в <code>templates</code>;</li>
+        <li>миграции и сиды обеспечивают воспроизводимый подъём окружения.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Запуск (локально)</h2>
+      <pre><code>cd lab1/gateway
+pip install -r requirements.txt
+# настроить .env по example.env
+alembic upgrade head
+uvicorn main:main_app --host 0.0.0.0 --port 8000</code></pre>
+      <p>При использовании Docker — см. <code>lab1/docker-compose.yml</code> в репозитории.</p>
+    </section>
+
+    <section>
+      <h2>Выводы</h2>
+      <p>
+        В ходе работы спроектирована предметная модель личных финансов, реализован backend на FastAPI с разделением
+        на слои API / core / models / templates, настроены миграции и начальное наполнение данных.
+        Сервис готов к дальнейшему расширению (уведомления о бюджете, аналитика, цели).
+      </p>
+    </section>
+
+    <footer>
+      Отчёт для публикации на GitHub Pages (ветка <code>main</code>, папка <code>/docs</code>).
+      Исходный код: репозиторий проекта, каталог <code>lab1/</code>.
+    </footer>
+  </div>
+</body>
+</html>
